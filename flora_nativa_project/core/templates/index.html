@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Catálogo de Plantas{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-flora-800 mb-2">Plantas Nativas de Chile</h1>
+    <p class="text-gray-600">Explora y aprende sobre la flora nativa chilena.</p>
+</div>
+
+<form method="GET" class="bg-white rounded-lg shadow p-4 mb-8 flex flex-col sm:flex-row gap-4">
+    <div class="flex-1">
+        <label for="q" class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+        <input type="text" name="q" id="q" value="{{ query|default:'' }}"
+               placeholder="Nombre común o científico..."
+               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-flora-500">
+    </div>
+    <div class="sm:w-48">
+        <label for="region" class="block text-sm font-medium text-gray-700 mb-1">Región</label>
+        <select name="region" id="region" onchange="this.form.submit()"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-flora-500">
+            <option value="">Todas las regiones</option>
+            {% for region in regiones %}
+                <option value="{{ region.id }}" {% if region_seleccionada == region.id|stringformat:"s" %}selected{% endif %}>
+                    {{ region.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex items-end">
+        <button type="submit" class="bg-flora-600 hover:bg-flora-700 text-white px-6 py-2 rounded transition">
+            Filtrar
+        </button>
+    </div>
+</form>
+
+{% if plantas %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for planta in plantas %}
+            <a href="{% url 'detalle_planta' planta.pk %}" class="bg-white rounded-lg shadow hover:shadow-lg transition block">
+                <div class="h-40 bg-gradient-to-br from-flora-200 to-flora-300 flex items-center justify-center rounded-t-lg">
+                    {% if planta.imagen_real %}
+                        <img src="{{ planta.imagen_real.url }}" alt="{{ planta.nombre_comun }}" class="h-full w-full object-cover rounded-t-lg">
+                    {% else %}
+                        <span class="text-5xl">🌱</span>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h2 class="text-lg font-bold text-flora-800">{{ planta.nombre_comun }}</h2>
+                    <p class="text-sm text-gray-500 italic">{{ planta.nombre_cientifico }}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        {% for region in planta.regiones.all %}
+                            <span class="text-xs bg-flora-100 text-flora-700 px-2 py-0.5 rounded">{{ region.nombre }}</span>
+                        {% endfor %}
+                    </div>
+                    <span class="inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded
+                        {% if planta.uso_principal == 'MED' %}bg-red-100 text-red-700
+                        {% elif planta.uso_principal == 'COM' %}bg-green-100 text-green-700
+                        {% elif planta.uso_principal == 'VEN' %}bg-purple-100 text-purple-700
+                        {% elif planta.uso_principal == 'ORN' %}bg-yellow-100 text-yellow-700
+                        {% else %}bg-blue-100 text-blue-700{% endif %}">
+                        {{ planta.get_uso_principal_display }}
+                    </span>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-16">
+        <span class="text-6xl">🌿</span>
+        <p class="text-gray-500 text-lg mt-4">No se encontraron plantas con los filtros seleccionados.</p>
+        <a href="{% url 'home' %}" class="text-flora-600 hover:text-flora-800 mt-2 inline-block">Limpiar filtros</a>
+    </div>
+{% endif %}
+{% endblock %}
